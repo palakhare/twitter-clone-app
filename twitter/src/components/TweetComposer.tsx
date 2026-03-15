@@ -325,8 +325,7 @@ const TweetComposer: React.FC<TweetComposerProps> = ({ onTweetPosted }) => {
                   <MapPin className="h-5 w-5" />
                   <BarChart3 className="h-5 w-5" />
                 </div>
-
-                <Button
+<Button
   type="submit"
   disabled={
     isLoading ||
@@ -336,8 +335,10 @@ const TweetComposer: React.FC<TweetComposerProps> = ({ onTweetPosted }) => {
   }
   className="bg-blue-500 rounded-full px-6"
 >
-                  {isLoading ? "Posting..." : "Post"}
-                </Button>
+  {isLoading ? "Posting..." : "Post"}
+</Button>
+                
+                  
               </div>
             </form>
           </div>
