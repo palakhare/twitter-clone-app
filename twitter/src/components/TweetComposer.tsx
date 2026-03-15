@@ -327,15 +327,15 @@ const TweetComposer: React.FC<TweetComposerProps> = ({ onTweetPosted }) => {
                 </div>
 
                 <Button
-                  type="submit"
-                  disabled={
-                    isLoading ||
-                    !content.trim() ||
-                    isOverLimit ||
-                    (audioFile && !otpVerified)
-                  }
-                  className="bg-blue-500 rounded-full px-6"
-                >
+  type="submit"
+  disabled={
+    isLoading ||
+    !content.trim() ||
+    isOverLimit ||
+    (!!audioFile && !otpVerified)
+  }
+  className="bg-blue-500 rounded-full px-6"
+>
                   {isLoading ? "Posting..." : "Post"}
                 </Button>
               </div>
