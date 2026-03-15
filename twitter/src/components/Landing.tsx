@@ -20,9 +20,9 @@ export default function LandingPage() {
   };
 
   if (user) {
-    return <Feed user={user} />;
-  }
-
+  return <Feed />;
+}
+  
   return (
     <div className="min-h-screen bg-black text-white flex">
       
