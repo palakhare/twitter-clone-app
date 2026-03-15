@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import I18nProvider from "@/components/I18nProvider";
 
@@ -24,6 +25,12 @@ export default function RootLayout({
         <I18nProvider>
           {children}
         </I18nProvider>
+
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
+        
       </body>
     </html>
   );
