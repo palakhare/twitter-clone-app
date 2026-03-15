@@ -331,7 +331,7 @@ const TweetComposer: React.FC<TweetComposerProps> = ({ onTweetPosted }) => {
     isLoading ||
     !content.trim() ||
     isOverLimit ||
-    (!!audioFile && !otpVerified)
+    Boolean(audioFile && !otpVerified)
   }
   className="bg-blue-500 rounded-full px-6"
 >
