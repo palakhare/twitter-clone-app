@@ -40,7 +40,7 @@ export default function Sidebar({ currentPage = "home", onNavigate }: SidebarPro
   const { user, logout } = useAuth();
   const { t } = useTranslation();
 
-  const userPhone = user?.phone ?? "8928446584";
+  const userPhone = (user as any)?.phone ?? "8928446584";
 
   const [showOtp, setShowOtp] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("");
