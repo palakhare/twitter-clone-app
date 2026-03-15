@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Mic, Square, Upload } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -21,77 +22,109 @@ export default function AudioTweetComposer() {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ======================
-  // 🎙 START RECORDING
+  // CLEANUP (avoid memory leaks)
+  // ======================
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (audioURL) URL.revokeObjectURL(audioURL);
+      mediaRecorderRef.current?.stream
+        ?.getTracks()
+        .forEach((track) => track.stop());
+    };
+  }, [audioURL]);
+
+  // ======================
+  // START RECORDING
   // ======================
   const startRecording = async () => {
-    if (!navigator.mediaDevices) {
-      alert("Recording not supported in this browser");
-      return;
-    }
+    try {
+      if (!navigator.mediaDevices) {
+        alert("Recording not supported in this browser");
+        return;
+      }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
 
-    mediaRecorderRef.current = mediaRecorder;
-    chunksRef.current = [];
-    setDuration(0);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+      setDuration(0);
 
-    mediaRecorder.ondataavailable = (event) => {
-      chunksRef.current.push(event.data);
-    };
-
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      setAudioBlob(blob);
-      setAudioURL(URL.createObjectURL(blob));
-    };
-
-    mediaRecorder.start();
-    setRecording(true);
-
-    // duration counter (max 300 sec)
-    timerRef.current = setInterval(() => {
-      setDuration((prev) => {
-        if (prev >= 300) {
-          stopRecording();
-          alert("Maximum 5 minutes reached");
-          return 300;
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
         }
-        return prev + 1;
-      });
-    }, 1000);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+
+        if (audioURL) URL.revokeObjectURL(audioURL);
+
+        const url = URL.createObjectURL(blob);
+        setAudioBlob(blob);
+        setAudioURL(url);
+      };
+
+      mediaRecorder.start();
+      setRecording(true);
+
+      timerRef.current = setInterval(() => {
+        setDuration((prev) => {
+          if (prev >= 300) {
+            stopRecording();
+            alert("Maximum 5 minutes reached");
+            return 300;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } catch (err) {
+      alert("Microphone access denied");
+    }
   };
 
   // ======================
-  // ⏹ STOP RECORDING
+  // STOP RECORDING
   // ======================
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
+
+    mediaRecorderRef.current?.stream
+      ?.getTracks()
+      .forEach((track) => track.stop());
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     setRecording(false);
-    if (timerRef.current) clearInterval(timerRef.current);
   };
 
   // ======================
-  // 📧 SEND OTP
+  // SEND OTP
   // ======================
   const sendOTP = async () => {
     try {
       await axios.post("http://localhost:5001/api/otp/send", {
-  userId: user._id,
-  email: user.email,
-});
+        userId: user?._id,
+        email: user?.email,
+      });
+
       setOtpSent(true);
       alert("OTP sent to your email");
-    } catch (err) {
+    } catch {
       alert("Failed to send OTP");
     }
   };
 
   // ======================
-  // 🔐 VERIFY OTP
+  // VERIFY OTP
   // ======================
   const verifyOTP = async () => {
     try {
@@ -99,6 +132,7 @@ export default function AudioTweetComposer() {
         email: user?.email,
         otp: otpInput,
       });
+
       setOtpVerified(true);
       alert("OTP Verified");
     } catch {
@@ -107,7 +141,7 @@ export default function AudioTweetComposer() {
   };
 
   // ======================
-  // ⬆ UPLOAD AUDIO
+  // UPLOAD AUDIO
   // ======================
   const uploadAudio = async () => {
     if (!audioBlob || !otpVerified) {
@@ -132,7 +166,8 @@ export default function AudioTweetComposer() {
 
       alert("Audio Tweet Posted");
 
-      // reset state
+      if (audioURL) URL.revokeObjectURL(audioURL);
+
       setAudioBlob(null);
       setAudioURL(null);
       setDuration(0);
@@ -144,12 +179,8 @@ export default function AudioTweetComposer() {
     }
   };
 
-  // ======================
-  // UI
-  // ======================
   return (
     <div className="bg-black p-4 border border-gray-800 rounded-xl text-white space-y-4">
-
       <h2 className="text-lg font-bold">Audio Tweet</h2>
 
       {/* Recording Controls */}
@@ -167,10 +198,8 @@ export default function AudioTweetComposer() {
         <span>{duration}s / 300s</span>
       </div>
 
-      {/* Preview */}
-      {audioURL && (
-        <audio controls src={audioURL} className="w-full" />
-      )}
+      {/* Audio Preview */}
+      {audioURL && <audio controls src={audioURL} className="w-full" />}
 
       {/* OTP Section */}
       {audioBlob && !otpVerified && (
@@ -194,12 +223,9 @@ export default function AudioTweetComposer() {
         </div>
       )}
 
-      {/* Upload Button */}
+      {/* Upload */}
       {otpVerified && (
-        <Button
-          onClick={uploadAudio}
-          className="w-full bg-blue-600"
-        >
+        <Button onClick={uploadAudio} className="w-full bg-blue-600">
           <Upload className="mr-2" />
           Post Audio Tweet
         </Button>
