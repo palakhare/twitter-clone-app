@@ -38,14 +38,13 @@ interface SidebarProps {
 
 export default function Sidebar({ currentPage = "home", onNavigate }: SidebarProps) {
   const { user, logout } = useAuth();
-  const { t } = useTranslation();
+const { t } = useTranslation();
 
-  const userPhone = (user as any)?.phone ?? "8928446584";
+const userPhone = (user as any)?.phone ?? "8928446584";
 
-  const [showOtp, setShowOtp] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("");
-  const [otp, setOtp] = useState("");
-
+const [showOtp, setShowOtp] = useState(false);
+const [selectedLanguage, setSelectedLanguage] = useState("");
+const [otp, setOtp] = useState("");
   /* LANGUAGE OTP FLOW */
 
   const changeLanguage = async (lang: string) => {
