@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { auth } from "./firebase";
-import axiosInstance from "../lib/axios";
+import axios from "axios";
 
 interface User {
   _id: string;
@@ -22,7 +22,7 @@ interface User {
   email: string;
   website: string;
   location: string;
-  notificationsEnabled: boolean; // 🔔 notifications
+  notificationsEnabled: boolean;
 }
 
 interface AuthContextType {
@@ -40,21 +40,27 @@ interface AuthContextType {
     location: string;
     website: string;
     avatar: string;
-    notificationsEnabled?: boolean; // 🔔 notifications
+    notificationsEnabled?: boolean;
   }) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   googlesignin: () => Promise<void>;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>; // 🔧 for syncing notifications
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
+// ----------------------- axios instance -----------------------
+const API_BASE = "https://twitter-clone-app-6.onrender.com"; // Render backend
+const axiosInstance = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,
+});
+
+// ----------------------- AuthContext -----------------------
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };
 
@@ -64,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Sync Firebase auth with backend user
+  // ----------------------- Sync Firebase + backend -----------------------
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
@@ -72,7 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const res = await axiosInstance.get<User>("/loggedinuser", {
             params: { email: firebaseUser.email },
           });
-
           if (res.data) {
             setUser(res.data);
             localStorage.setItem("twitter-user", JSON.stringify(res.data));
@@ -91,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => unsubscribe();
   }, []);
 
+  // ----------------------- Login -----------------------
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
@@ -101,7 +107,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const res = await axiosInstance.get<User>("/loggedinuser", {
           params: { email: firebaseUser.email },
         });
-
         if (res.data) {
           setUser(res.data);
           localStorage.setItem("twitter-user", JSON.stringify(res.data));
@@ -115,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // ----------------------- Signup -----------------------
   const signup = async (
     email: string,
     password: string,
@@ -137,9 +143,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         bio: "",
         location: "",
         website: "",
-        notificationsEnabled: true, // 🔔 default ON
+        notificationsEnabled: true,
       };
 
+      // Use /api/auth/register if your authRoutes have /register
       const res = await axiosInstance.post<User>("/register", newUser);
 
       if (res.data) {
@@ -154,12 +161,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // ----------------------- Logout -----------------------
   const logout = async () => {
     setUser(null);
     await signOut(auth);
     localStorage.removeItem("twitter-user");
   };
 
+  // ----------------------- Update Profile -----------------------
   const updateProfile = async (profileData: {
     displayName: string;
     bio: string;
@@ -188,6 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // ----------------------- Google Sign-In -----------------------
   const googlesignin = async () => {
     setIsLoading(true);
     try {
@@ -199,12 +209,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       let userData: User | null = null;
 
+      // Try fetch existing user
       try {
         const res = await axiosInstance.get<User>("/loggedinuser", {
           params: { email: firebaseUser.email },
         });
         userData = res.data;
       } catch {
+        // If not exist, register
         const newUser: Partial<User> = {
           username: firebaseUser.email.split("@")[0],
           displayName: firebaseUser.displayName || "User",
@@ -216,7 +228,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           bio: "",
           location: "",
           website: "",
-          notificationsEnabled: true, // 🔔 default ON
+          notificationsEnabled: true,
         };
 
         const registerRes = await axiosInstance.post<User>("/register", newUser);
@@ -245,7 +257,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         isLoading,
         googlesignin,
-        setUser, // 🔧 exposed to allow ProfilePage to update notifications
+        setUser,
       }}
     >
       {children}
