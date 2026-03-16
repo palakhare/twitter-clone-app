@@ -81,8 +81,10 @@ if (!MONGO_URI) {
   process.exit(1);
 }
 
-mongoose
-  .connect(MONGO_URI)
+mongoose.connect(MONGO_URI, {
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000
+});
   .then(() => {
     console.log("✅ MongoDB connected");
 
