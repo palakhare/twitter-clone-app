@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import TweetCard from "./TweetCard";
 import { Card, CardContent } from "./ui/card";
-import Editprofile from "./Editprofile";
+import EditProfile from "./EditProfile"; // ✅ fixed import
 import axiosInstance from "@/lib/axios";
 
 export default function ProfilePage() {
@@ -28,7 +28,6 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  // Fetch all tweets
   const fetchTweets = async () => {
     try {
       setLoading(true);
@@ -47,7 +46,6 @@ export default function ProfilePage() {
 
   const userTweets = tweets.filter((tweet) => tweet.author._id === user._id);
 
-  // 🔔 Toggle notification preference
   const toggleNotifications = async () => {
     if (typeof window === "undefined" || !("Notification" in window)) {
       alert("Notifications are not supported in this browser.");
@@ -57,7 +55,6 @@ export default function ProfilePage() {
     try {
       setUpdatingNotif(true);
 
-      // If enabling → request permission
       if (!user.notificationsEnabled) {
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
@@ -67,13 +64,9 @@ export default function ProfilePage() {
       }
 
       const updatedValue = !user.notificationsEnabled;
-
-      // Update backend using correct route
       const res = await axiosInstance.patch(`/userupdate/${user.email}`, {
         notificationsEnabled: updatedValue,
       });
-
-      // Update auth context
       setUser(res.data);
     } catch (err) {
       console.error("Failed to update notification preference:", err);
@@ -129,7 +122,6 @@ export default function ProfilePage() {
 
       {/* Info & Notification Toggle */}
       <div className="px-4 pb-4 mt-12">
-        {/* 🔔 Notifications */}
         <div className="flex items-center justify-between bg-gray-900 rounded-xl p-4 mb-4">
           <div>
             <p className="text-white font-semibold">Keyword Notifications</p>
@@ -150,7 +142,6 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        {/* User Info */}
         <div className="flex items-start justify-between mb-3">
           <div>
             <h1 className="text-2xl font-bold text-white">{user.displayName}</h1>
@@ -210,7 +201,11 @@ export default function ProfilePage() {
         </TabsContent>
       </Tabs>
 
-      <Editprofile isopen={showEditModal} onclose={() => setShowEditModal(false)} />
+      {/* ✅ Edit Profile Modal */}
+      <EditProfile
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+      />
     </div>
   );
 }
