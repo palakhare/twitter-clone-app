@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -9,7 +8,6 @@ import { X } from "lucide-react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Switch } from "./ui/switch"; // assuming you have a switch component
 
 interface EditProfileProps {
   isOpen: boolean;
@@ -22,7 +20,6 @@ interface FormData {
   location: string;
   website: string;
   avatar: string;
-  notificationsEnabled: boolean;
 }
 
 const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
@@ -33,7 +30,6 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
     location: "",
     website: "",
     avatar: "",
-    notificationsEnabled: true,
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,7 +41,6 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
         location: user.location || "",
         website: user.website || "",
         avatar: user.avatar || "",
-        notificationsEnabled: user.notificationsEnabled ?? true,
       });
     }
   }, [user]);
@@ -152,18 +147,6 @@ const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
               <Input
                 value={formData.avatar}
                 onChange={(e) => handleChange("avatar", e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Notifications */}
-            <div className="flex items-center space-x-2">
-              <Label>Notifications</Label>
-              <Switch
-                checked={formData.notificationsEnabled}
-                onCheckedChange={(checked) =>
-                  handleChange("notificationsEnabled", checked)
-                }
                 disabled={isLoading}
               />
             </div>
