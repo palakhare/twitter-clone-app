@@ -24,32 +24,31 @@ const app = express();
 app.use(express.json());
 
 /* ---------------- CORS ---------------- */
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
 ];
 
-
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
 
       if (!origin) return callback(null, true);
 
       if (
         allowedOrigins.includes(origin) ||
-        (origin && origin.endsWith(".vercel.app"))
+        origin.endsWith(".vercel.app")
       ) {
         return callback(null, true);
       }
 
-      return callback(null, false);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true
   })
 );
-
-
+app.set("trust proxy", 1);
 /* ---------------- ROUTES ---------------- */
 
 app.use("/api/language", languageRoutes);
