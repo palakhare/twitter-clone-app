@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -8,20 +9,31 @@ import { X } from "lucide-react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { Switch } from "./ui/switch"; // assuming you have a switch component
 
 interface EditProfileProps {
-  isopen: boolean;
-  onclose: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const Editprofile = ({ isopen, onclose }: EditProfileProps) => {
+interface FormData {
+  displayName: string;
+  bio: string;
+  location: string;
+  website: string;
+  avatar: string;
+  notificationsEnabled: boolean;
+}
+
+const EditProfile = ({ isOpen, onClose }: EditProfileProps) => {
   const { user, updateProfile } = useAuth();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     displayName: "",
     bio: "",
     location: "",
     website: "",
     avatar: "",
+    notificationsEnabled: true,
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,13 +45,14 @@ const Editprofile = ({ isopen, onclose }: EditProfileProps) => {
         location: user.location || "",
         website: user.website || "",
         avatar: user.avatar || "",
+        notificationsEnabled: user.notificationsEnabled ?? true,
       });
     }
   }, [user]);
 
-  if (!isopen || !user) return null;
+  if (!isOpen || !user) return null;
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleChange = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -50,9 +63,10 @@ const Editprofile = ({ isopen, onclose }: EditProfileProps) => {
     try {
       setIsLoading(true);
       await updateProfile(formData);
-      onclose();
+      onClose();
     } catch (err) {
       console.error("Profile update failed:", err);
+      alert("Failed to update profile. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -67,14 +81,12 @@ const Editprofile = ({ isopen, onclose }: EditProfileProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={onclose}
+                onClick={onClose}
                 disabled={isLoading}
               >
                 <X className="h-5 w-5" />
               </Button>
-              <CardTitle className="text-xl font-bold">
-                Edit profile
-              </CardTitle>
+              <CardTitle className="text-xl font-bold">Edit Profile</CardTitle>
             </div>
 
             <Button
@@ -94,43 +106,65 @@ const Editprofile = ({ isopen, onclose }: EditProfileProps) => {
             onSubmit={handleSubmit}
             className="space-y-6 mt-4"
           >
+            {/* Name */}
             <div className="space-y-2">
               <Label>Name</Label>
               <Input
                 value={formData.displayName}
-                onChange={(e) =>
-                  handleInputChange("displayName", e.target.value)
-                }
+                onChange={(e) => handleChange("displayName", e.target.value)}
+                disabled={isLoading}
               />
             </div>
 
+            {/* Bio */}
             <div className="space-y-2">
               <Label>Bio</Label>
               <Textarea
                 value={formData.bio}
-                onChange={(e) =>
-                  handleInputChange("bio", e.target.value)
-                }
+                onChange={(e) => handleChange("bio", e.target.value)}
+                disabled={isLoading}
               />
             </div>
 
+            {/* Location */}
             <div className="space-y-2">
               <Label>Location</Label>
               <Input
                 value={formData.location}
-                onChange={(e) =>
-                  handleInputChange("location", e.target.value)
-                }
+                onChange={(e) => handleChange("location", e.target.value)}
+                disabled={isLoading}
               />
             </div>
 
+            {/* Website */}
             <div className="space-y-2">
               <Label>Website</Label>
               <Input
                 value={formData.website}
-                onChange={(e) =>
-                  handleInputChange("website", e.target.value)
+                onChange={(e) => handleChange("website", e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Avatar URL */}
+            <div className="space-y-2">
+              <Label>Avatar URL</Label>
+              <Input
+                value={formData.avatar}
+                onChange={(e) => handleChange("avatar", e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Notifications */}
+            <div className="flex items-center space-x-2">
+              <Label>Notifications</Label>
+              <Switch
+                checked={formData.notificationsEnabled}
+                onCheckedChange={(checked) =>
+                  handleChange("notificationsEnabled", checked)
                 }
+                disabled={isLoading}
               />
             </div>
           </form>
@@ -140,4 +174,4 @@ const Editprofile = ({ isopen, onclose }: EditProfileProps) => {
   );
 };
 
-export default Editprofile;
+export default EditProfile;
