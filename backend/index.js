@@ -28,6 +28,10 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
 ];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+];
 
 app.use(
   cors({
@@ -37,21 +41,19 @@ app.use(
 
       if (
         allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
+        (origin && origin.endsWith(".vercel.app"))
       ) {
         return callback(null, true);
       }
 
-      callback(new Error("Not allowed by CORS"));
+      return callback(null, false);
     },
-    credentials: true,
+    credentials: true
   })
 );
 
-app.options("*", cors({
-  origin: true,
-  credentials: true
-}));
+app.options("*", cors());
+
       
 
 /* ---------------- ROUTES ---------------- */
@@ -136,9 +138,9 @@ app.patch("/userupdate/:email", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json(
-  await User.findById(updatedUser._id).select("-password")
-);
+    const safeUser = await User.findById(updatedUser._id).select("-password");
+res.status(200).json(safeUser);
+    
   } catch (error) {
     res.status(400).send({ error: error.message });
   }
