@@ -10,7 +10,7 @@ import tweetRoutes from "./routes/tweetRoutes.js";
 import otpRoutes from "./routes/otp.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
-import authRoutes from "./routes/auth.js";
+
 import authRoutes from "./routes/authRoutes.js";
 
 import User from "./modals/user.js";
