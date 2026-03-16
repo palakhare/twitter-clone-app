@@ -136,7 +136,9 @@ app.patch("/userupdate/:email", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).send(updatedUser);
+    res.status(200).json(
+  await User.findById(updatedUser._id).select("-password")
+);
   } catch (error) {
     res.status(400).send({ error: error.message });
   }
